@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tech Spotter</title>
+    <title>Tech Spotter - Website Technology Checker</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- React and Babel for running React in the browser -->
@@ -11,9 +11,8 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <style>
-        /* CORRECTED: @import rule must be at the top */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
-        
+        html { scroll-behavior: smooth; }
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc;
@@ -22,7 +21,7 @@
             background-image: linear-gradient(to right, #2563eb, #3b82f6);
         }
         .shadow-glow {
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
         }
         .loader {
             border: 4px solid #f3f3f3;
@@ -42,7 +41,40 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useRef } = React;
+
+        // --- Individual Components for the Landing Page ---
+
+        const HeroSection = ({ handleAnalyze, url, setUrl, isLoading, error }) => (
+            <header className="py-20 md:py-32 bg-white">
+                <div className="container mx-auto px-4 text-center">
+                    <h1 className="text-4xl md:text-6xl font-extrabold mb-4 text-gray-900">Instantly Uncover the Tech Behind Any Website</h1>
+                    <p className="text-lg md:text-xl text-gray-500 max-w-3xl mx-auto">
+                        Analyze GTM, GA4, frameworks, compliance, and more in seconds. Free, fast, and no registration required.
+                    </p>
+                    <form onSubmit={handleAnalyze} className="mt-10 max-w-2xl mx-auto">
+                        <div className="flex items-center p-2 border-2 border-slate-200 rounded-lg bg-white shadow-lg focus-within:border-blue-500 transition-all">
+                            <span className="mx-3 text-gray-400">🌐</span>
+                            <input
+                                type="text"
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                placeholder="Enter full URL (e.g., https://example.com)"
+                                className="w-full p-2 text-lg bg-transparent focus:outline-none"
+                            />
+                            <button 
+                                type="submit" 
+                                disabled={isLoading}
+                                className="ml-2 px-6 py-3 bg-gradient-primary text-white font-semibold rounded-lg hover:shadow-glow transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                            >
+                                {isLoading ? 'Analyzing...' : 'Analyze Site'}
+                            </button>
+                        </div>
+                        {error && <p className="text-red-500 mt-2">{error}</p>}
+                    </form>
+                </div>
+            </header>
+        );
 
         const TechResults = ({ results, url }) => {
             if (!results || !results.detected_technologies) return null;
@@ -50,32 +82,35 @@
             const { detected_technologies } = results;
             const allTechs = Object.values(detected_technologies).flat();
 
+            const formatCategoryName = (name) => {
+                return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            };
+
             return (
-                <div className="py-10 md:py-20 bg-slate-50">
+                <div className="py-10 md:py-20 bg-slate-50" id="results">
                     <div className="container mx-auto px-4">
                         <div className="max-w-6xl mx-auto">
                             <div className="text-center mb-12">
                                 <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-                                    Analysis Results for <span className="text-blue-600">{url}</span>
+                                    Analysis Results for <a href={url} target="_blank" className="text-blue-600 underline">{url}</a>
                                 </h2>
                                 <p className="text-gray-500 text-lg">
                                     {results.message} Found {allTechs.length} technologies.
                                 </p>
                             </div>
-
                             <div className="space-y-8">
                                 {Object.entries(detected_technologies).map(([category, techs]) => {
                                     if (techs.length === 0) return null;
                                     return (
                                         <div key={category} className="p-6 bg-white rounded-xl border border-slate-200 shadow-sm">
                                             <h3 className="text-xl font-semibold mb-4 capitalize flex items-center gap-2 text-gray-800">
-                                                {category} ({techs.length})
+                                                {formatCategoryName(category)} ({techs.length})
                                             </h3>
                                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                {techs.map((tech, index) => (
+                                                {techs.map((techName, index) => (
                                                     <div key={index} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
-                                                        <div className="font-medium text-gray-700">{tech.name}</div>
-                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">{tech.detected}</span>
+                                                        <div className="font-medium text-gray-700">{techName}</div>
+                                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Detected</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -88,12 +123,72 @@
                 </div>
             );
         };
+        
+        const FeaturesSection = () => (
+            <div className="py-20 bg-white">
+                <div className="container mx-auto px-4 text-center">
+                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">A Powerful, Free Toolset</h2>
+                    <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-12">Tech Spotter goes beyond the surface to give you actionable insights.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div className="p-6 bg-slate-50 rounded-lg border border-slate-200">
+                            <h3 className="text-lg font-bold mb-2"><span className="mr-2">📊</span>Analytics & Tagging</h3>
+                            <p className="text-gray-600">Detect Google Analytics (GA4/UA), Google Tag Manager, Ads tags, and dataLayer presence.</p>
+                        </div>
+                        <div className="p-6 bg-slate-50 rounded-lg border border-slate-200">
+                            <h3 className="text-lg font-bold mb-2"><span className="mr-2">👨‍💻</span>Framework Detection</h3>
+                            <p className="text-gray-600">Identify modern frameworks like React, Next.js, and other essential JavaScript libraries.</p>
+                        </div>
+                        <div className="p-6 bg-slate-50 rounded-lg border border-slate-200">
+                            <h3 className="text-lg font-bold mb-2"><span className="mr-2">✅</span>Compliance Check</h3>
+                            <p className="text-gray-600">See if a site uses a Consent Management Platform (CMP) like OneTrust.</p>
+                        </div>
+                        <div className="p-6 bg-slate-50 rounded-lg border border-slate-200">
+                            <h3 className="text-lg font-bold mb-2"><span className="mr-2">🔒</span>Server & Security</h3>
+                            <p className="text-gray-600">Uncover security headers like HSTS and identify Content Delivery Networks (CDNs).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
 
+        const TestimonialsSection = () => (
+            <div className="py-20 bg-slate-50">
+                <div className="container mx-auto px-4 text-center">
+                    <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12">Trusted by Professionals Worldwide</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="p-8 bg-white rounded-lg border border-slate-200 shadow-sm">
+                            <p className="text-gray-600 mb-4">"Tech Spotter is my go-to for quick competitor analysis. I can see their analytics setup in seconds. It's a game-changer for my marketing workflow."</p>
+                            <div className="font-bold text-gray-900">Sarah J.</div>
+                            <div className="text-sm text-gray-500">Digital Marketer</div>
+                        </div>
+                        <div className="p-8 bg-white rounded-lg border border-slate-200 shadow-sm">
+                            <p className="text-gray-600 mb-4">"As a developer, I use this daily to verify tag implementation on our staging sites. It's fast, simple, and incredibly accurate. Highly recommended."</p>
+                            <div className="font-bold text-gray-900">Mike R.</div>
+                            <div className="text-sm text-gray-500">Frontend Developer</div>
+                        </div>
+                        <div className="p-8 bg-white rounded-lg border border-slate-200 shadow-sm">
+                            <p className="text-gray-600 mb-4">"We've integrated Tech Spotter into our client onboarding process. It gives us a snapshot of a prospect's tech stack instantly, which is invaluable for our agency."</p>
+                            <div className="font-bold text-gray-900">Emily Chen</div>
+                            <div className="text-sm text-gray-500">Agency Owner</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Footer = () => (
+            <footer className="py-8 bg-gray-800 text-white text-center">
+                <p>&copy; {new Date().getFullYear()} Tech Spotter. All rights reserved.</p>
+            </footer>
+        );
+
+        // --- Main App Component ---
         const App = () => {
             const [url, setUrl] = useState('');
             const [isLoading, setIsLoading] = useState(false);
             const [results, setResults] = useState(null);
             const [error, setError] = useState('');
+            const resultsRef = useRef(null);
 
             const realApiCall = async (analysisUrl) => {
                 const backendUrl = "https://tech-spotter-api.onrender.com/analyze";
@@ -111,8 +206,6 @@
 
             const handleAnalyze = async (e) => {
                 e.preventDefault();
-                console.log("Analyze button clicked! Starting analysis..."); // Debugging line
-
                 if (!url) {
                     setError('Please enter a valid website URL.');
                     return;
@@ -125,6 +218,14 @@
                 try {
                     const data = await realApiCall(url);
                     setResults(data);
+                    // Scroll to results after they are loaded
+                    setTimeout(() => {
+                        // THIS IS THE FIX: Rewritten for older Babel version
+                        const resultsEl = document.getElementById('results');
+                        if (resultsEl) {
+                           resultsEl.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    }, 100);
                 } catch (err) {
                     setError(err.message);
                 } finally {
@@ -134,35 +235,7 @@
 
             return (
                 <div className="min-h-screen bg-slate-50 text-gray-800">
-                    <header className="py-20">
-                        <div className="container mx-auto px-4 text-center">
-                            <h1 className="text-4xl md:text-6xl font-extrabold mb-4">Tech Spotter</h1>
-                            <p className="text-lg md:text-xl text-gray-500 max-w-3xl mx-auto">
-                                Discover the technology stack behind any website. Analyze GTM, GA4, frameworks, and more in seconds.
-                            </p>
-                            
-                            <form onSubmit={handleAnalyze} className="mt-10 max-w-2xl mx-auto">
-                                <div className="flex items-center p-2 border-2 border-blue-200 rounded-lg bg-white shadow-lg focus-within:border-blue-500 transition-all">
-                                    <span className="mx-3 text-gray-400">🌐</span>
-                                    <input
-                                        type="text"
-                                        value={url}
-                                        onChange={(e) => setUrl(e.target.value)}
-                                        placeholder="Enter website URL (e.g., https://example.com)"
-                                        className="w-full p-2 text-lg bg-transparent focus:outline-none"
-                                    />
-                                    <button 
-                                        type="submit" 
-                                        disabled={isLoading}
-                                        className="ml-2 px-6 py-3 bg-gradient-primary text-white font-semibold rounded-lg hover:shadow-glow transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-                                    >
-                                        {isLoading ? 'Analyzing...' : 'Analyze Site'}
-                                    </button>
-                                </div>
-                                {error && <p className="text-red-500 mt-2">{error}</p>}
-                            </form>
-                        </div>
-                    </header>
+                    <HeroSection handleAnalyze={handleAnalyze} url={url} setUrl={setUrl} isLoading={isLoading} error={error} />
                     
                     <main>
                         {isLoading && (
@@ -172,7 +245,17 @@
                         )}
                         
                         {results && <TechResults results={results} url={url} />}
+                        
+                        <FeaturesSection />
+                        <TestimonialsSection />
+                        
+                        {/* Repeat the CTA at the bottom */}
+                        <div className="bg-white py-20">
+                           <HeroSection handleAnalyze={handleAnalyze} url={url} setUrl={setUrl} isLoading={isLoading} error={error} />
+                        </div>
                     </main>
+
+                    <Footer />
                 </div>
             );
         };
