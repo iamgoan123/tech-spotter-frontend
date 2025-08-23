@@ -9,14 +9,15 @@
     <!-- React and Babel for running React in the browser -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <style>
-        /* Custom styles for the theme */
+        /* CORRECTED: @import rule must be at the top */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+        
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* Light gray background */
+            background-color: #f8fafc;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
         .bg-gradient-primary {
             background-image: linear-gradient(to right, #2563eb, #3b82f6);
         }
@@ -43,7 +44,6 @@
     <script type="text/babel">
         const { useState } = React;
 
-        // --- UI COMPONENTS ---
         const TechResults = ({ results, url }) => {
             if (!results || !results.detected_technologies) return null;
             
@@ -89,7 +89,6 @@
             );
         };
 
-        // --- MAIN APP COMPONENT ---
         const App = () => {
             const [url, setUrl] = useState('');
             const [isLoading, setIsLoading] = useState(false);
@@ -98,13 +97,11 @@
 
             const realApiCall = async (analysisUrl) => {
                 const backendUrl = "https://tech-spotter-api.onrender.com/analyze";
-                
                 const response = await fetch(backendUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: analysisUrl })
                 });
-
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.error || 'Analysis failed!');
@@ -114,6 +111,8 @@
 
             const handleAnalyze = async (e) => {
                 e.preventDefault();
+                console.log("Analyze button clicked! Starting analysis..."); // Debugging line
+
                 if (!url) {
                     setError('Please enter a valid website URL.');
                     return;
@@ -178,7 +177,6 @@
             );
         };
 
-        // Render the main App component to the DOM using the modern createRoot API
         const container = document.getElementById('root');
         const root = ReactDOM.createRoot(container);
         root.render(<App />);
