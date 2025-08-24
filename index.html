@@ -57,7 +57,6 @@
         );
 
         const TechResults = ({ results, url }) => {
-            // Robustness check: Ensure results and detected_technologies exist
             if (!results || !results.detected_technologies) {
                 return (
                     <div className="py-10 md:py-20 bg-slate-50 text-center">
@@ -246,7 +245,8 @@
             const [error, setError] = useState('');
 
             const realApiCall = async (analysisUrl) => {
-                const backendUrl = "https://tech-spotter-api.onrender.com/analyze";
+                // THIS IS THE ONLY CHANGE: Pointing to the new URL
+                const backendUrl = "https://tech-spotter-api-new.onrender.com/analyze";
                 const response = await fetch(backendUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
